@@ -1,14 +1,65 @@
-<script>
-    fetch('https://api.github.com/repos/antonin-acd-applications/everytask-explorer/contents/')
-        .then(response => response.json())
-        .then(files => {
-            const list = document.createElement('ul');
-            files.forEach(file => {
-                const item = document.createElement('li');
-                item.innerHTML = `<a href="${file.html_url}">${file.name}</a>`;
-                list.appendChild(item);
-            });
-            document.body.appendChild(list);
-        })
-        .catch(error => console.error('Erreur:', error));
-</script>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index of Files</title>
+</head>
+<body>
+    <h1>Index of Files</h1>
+    <div id="file-list"></div>
+
+    <script>
+        const username = "antonin-acd-applications"; // Remplace par ton pseudo GitHub
+        const repoName = "everytask-explorer"; // Remplace par le nom de ton repo
+        let currentPath = ""; // Garde une trace du chemin de dossier actuel
+
+        function loadDirectory(path = "") {
+            const url = `https://api.github.com/repos/${username}/${repoName}/contents/${path}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(files => {
+                    const listContainer = document.getElementById("file-list");
+                    listContainer.innerHTML = "";
+
+                    // Ajouter un lien pour revenir en arrière si on est dans un sous-dossier
+                    if (path !== "") {
+                        const backLink = document.createElement("a");
+                        backLink.href = "#";
+                        backLink.innerText = "⬅️ Back";
+                        backLink.onclick = () => {
+                            currentPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
+                            loadDirectory(currentPath);
+                            return false;
+                        };
+                        listContainer.appendChild(backLink);
+                        listContainer.appendChild(document.createElement("br"));
+                    }
+
+                    // Lister tous les fichiers et dossiers
+                    files.forEach(file => {
+                        const item = document.createElement("div");
+                        if (file.type === "dir") {
+                            // Affiche un lien vers le dossier
+                            item.innerHTML = `<a href="#" onclick="navigateTo('${file.path}'); return false;">📁 ${file.name}</a>`;
+                        } else {
+                            // Affiche un lien vers le fichier
+                            item.innerHTML = `<a href="${file.html_url}" target="_blank">📄 ${file.name}</a>`;
+                        }
+                        listContainer.appendChild(item);
+                    });
+                })
+                .catch(error => console.error("Erreur:", error));
+        }
+
+        // Fonction pour naviguer dans un dossier
+        function navigateTo(path) {
+            currentPath = path;
+            loadDirectory(currentPath);
+        }
+
+        // Charger le dossier racine au démarrage
+        loadDirectory();
+    </script>
+</body>
+</html>
